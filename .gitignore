@@ -1,3 +1,9 @@
+# Project specific
+.vscode/*
+bin/*
+data/*
+tmp/*
+
 # Prerequisites
 *.d
 
