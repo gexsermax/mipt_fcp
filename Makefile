@@ -10,7 +10,7 @@ TmpDir = tmp/
 ServerDir = server/
 ServerSourcesDir = $(addprefix $(ServerDir), $(SourcesDir))
 ServerObjectsDir = $(addprefix $(ServerDir), $(ObjectsDir))
-ServerSources = server.c controller.c
+ServerSources = server.c controller.c communicator.c
 ServerObjects = $(ServerSources:.c=.o)
 ServerCObjects = $(addprefix $(ServerObjectsDir), $(ServerObjects))
 ServerExecutable = server

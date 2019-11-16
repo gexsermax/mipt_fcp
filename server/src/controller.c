@@ -3,7 +3,7 @@
 /* for printf, NULL, fgets */
 #include <stdio.h>
 
-/* for malloc, free */
+/* for malloc, free, exit */
 #include <stdlib.h>
 
 /* for errno, perror */
@@ -20,7 +20,7 @@
 
 /* Commands for server control */
 #define COMMAND_MAX_LENGTH 16 /* Maximum length of available command */
-#define COMMANDS_NUM 2 /* Number of available commands */
+#define NCOMMANDS 2 /* Number of available commands */
 /* Using '\n' because 'fgets' stores it into the buffer */
 static const char * const commands[] = {
   "stop\n",
@@ -59,13 +59,14 @@ void *control (void *args_void) {
       /* help */
       else if (!strcmp(command, commands[1])) {
         printf("Available commands:\n");
-        for (int i = 0; i < COMMANDS_NUM; ++i) {
+        for (int i = 0; i < NCOMMANDS; ++i) {
           printf("\t%s", commands[i]);
         }
       }
       /* unknown command */
       else {
-        printf("Unknown command. Type 'help' to get a list of the available commands.\n");
+        printf(ANSI_COLOR_YELLOW "Unknown command" ANSI_COLOR_RESET ": %s"
+               "Type 'help' to get a list of the available commands.\n", command);
       }
     }
     free(command);
