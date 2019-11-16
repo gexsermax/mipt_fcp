@@ -21,6 +21,7 @@ struct communication_arguments {
   int thread_id;
   epollpar_t *epoll;
   int control_fifo_fd_read;
+  int communication_fd_read;
   sharval_t *sharval;
 };
 typedef struct communication_arguments commargs_t;

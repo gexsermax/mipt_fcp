@@ -20,4 +20,9 @@
     __FILE__, __func__, __LINE__, strerror(errno));                            \
   exit(errno);
 
+#define CLIENT_FIFO_DIR "tmp/"
+#define SERVER_COMMUNICATION_FIFO_PATHNAME "tmp/communicator.fifo"
+
+#define FIFO_ATOMIC_BLOCK_SIZE 4096
+
 #endif /* _FCP_LIB_H */

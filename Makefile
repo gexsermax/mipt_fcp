@@ -29,7 +29,7 @@ ClientCExecutable = $(addprefix $(BinDir), $(ClientExecutable))
 
 all: $(ServerExecutable) $(ClientExecutable)
 
-$(ServerExecutable): $(ServerCExecutable) .server_tmp_dir
+$(ServerExecutable): $(ServerCExecutable) .server_tmp_dir .tmp_dir
 
 $(ServerCExecutable): $(ServerCObjects) .bin_dir
 	$(CC) $(CFlags) $(ServerCObjects) -o $@
@@ -43,7 +43,7 @@ $(ServerObjectsDir)%.o: $(ServerSourcesDir)%.c .server_object_dir
 .server_object_dir:
 	mkdir -p $(ServerObjectsDir)
 
-$(ClientExecutable): $(ClientCExecutable) .client_tmp_dir
+$(ClientExecutable): $(ClientCExecutable) .client_tmp_dir .tmp_dir
 
 $(ClientCExecutable): $(ClientCObjects) .bin_dir
 	$(CC) $(CFlags) $(ClientCObjects) -o $@
@@ -56,6 +56,9 @@ $(ClientObjectsDir)%.o: $(ClientSourcesDir)%.c .client_object_dir
 
 .client_object_dir:
 	mkdir -p $(ClientObjectsDir)
+
+.tmp_dir:
+	mkdir -p $(TmpDir)
 
 .bin_dir:
 	mkdir -p $(BinDir)

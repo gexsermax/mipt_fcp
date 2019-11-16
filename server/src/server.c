@@ -9,7 +9,7 @@
 /* for bool variables */
 #include <stdbool.h>
 
-/* for errno, perror */
+/* for errno */
 #include <errno.h>
 
 /* for strerror, memset */
@@ -33,13 +33,13 @@
 /* for mkfifo, open */
 #include <sys/stat.h>
 
-/* for open */
+/* for mkfifo modes, open */
 #include <fcntl.h>
 
 /* for epoll_create1, struct epoll_event, epoll_ctl */
 #include <sys/epoll.h>
 
-/* for some helpful tips and tricks */
+/* for some helpful tips and tricks, defines */
 #include "../../include/lib.h"
 
 /* for control thread */
@@ -76,20 +76,37 @@ int main(int argc, char *argv[], char *envp[]) {
   }
 
   /* Create a control FIFO and open it for reading */
-  if (unlink(CONTROL_FIFO_PATH) && errno != ENOENT) {
+  if (unlink(CONTROL_FIFO_PATHNAME) && errno != ENOENT) {
     eprintf("unlink");
   }
-  if (mkfifo(CONTROL_FIFO_PATH, 0666)) {
+  if (mkfifo(CONTROL_FIFO_PATHNAME, 0666)) {
     eprintf("mkfifo");
   }
-  int control_fifo_fd_read = open(CONTROL_FIFO_PATH, O_RDONLY | O_NONBLOCK);
+  int control_fifo_fd_read = open(CONTROL_FIFO_PATHNAME, O_RDONLY | O_NONBLOCK);
   if (control_fifo_fd_read < 0) {
     eprintf("open");
   }
 
+  /* Create a communication FIFO and open it for reading
+   * (and writing to avoid the epoll signal when client closes the communication FIFO) */
+  if (unlink(SERVER_COMMUNICATION_FIFO_PATHNAME) && errno != ENOENT) {
+    eprintf("unlink");
+  }
+  if (mkfifo(SERVER_COMMUNICATION_FIFO_PATHNAME, 0666)) {
+    eprintf("mkfifo");
+  }
+  int communication_fifo_fd_read = open(SERVER_COMMUNICATION_FIFO_PATHNAME, O_RDONLY | O_NONBLOCK);
+  if (communication_fifo_fd_read < 0) {
+    eprintf("open");
+  }
+  int communication_fifo_fd_write = open(SERVER_COMMUNICATION_FIFO_PATHNAME, O_WRONLY | O_NONBLOCK);
+  if (communication_fifo_fd_write < 0) {
+    eprintf("open");
+  }
+
   /* Create an epoll;
-   * create and initialise an epoll control event;
-   * add the control fifo descriptor into the epoll;
+   * create and initialise epoll control and communication  events;
+   * add their fifo descriptors into the epoll;
    * create an array for epoll events;
    * create a structure with epoll parameters for threads */
   int epoll_fd = epoll_create1(0);
@@ -101,6 +118,13 @@ int main(int argc, char *argv[], char *envp[]) {
   control_epoll_event.events = EPOLLIN;
   control_epoll_event.data.fd = control_fifo_fd_read;
   if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, control_fifo_fd_read, &control_epoll_event)) {
+    eprintf("epoll_ctl");
+  }
+  struct epoll_event communication_epoll_event;
+  memset(&communication_epoll_event, 0, sizeof(struct epoll_event)); /* initialise the structure by zeroes */
+  communication_epoll_event.events = EPOLLIN;
+  communication_epoll_event.data.fd = communication_fifo_fd_read;
+  if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, communication_fifo_fd_read, &communication_epoll_event)) {
     eprintf("epoll_ctl");
   }
   struct epoll_event epoll_events[NEPOLL_EVENTS_MAX];
@@ -137,7 +161,10 @@ int main(int argc, char *argv[], char *envp[]) {
   commargs_t communicators_args[nthreads];
   sharval_t sharval = {true, &mutex}; /* running, mutex */
   for (int i = 0; i < nthreads; ++i) {
-    communicators_args[i] = (commargs_t){&flags, msgid, i + 1, &epoll, control_fifo_fd_read, &sharval};
+    communicators_args[i] = (commargs_t){&flags, msgid,
+                                         i + 1, /* thread id */
+                                         &epoll, control_fifo_fd_read,
+                                         communication_fifo_fd_read, &sharval};
     if (pthread_create(&communicators[i], NULL, communicate, &communicators_args[i])) {
       eprintf("pthread_create");
     }
@@ -166,10 +193,19 @@ int main(int argc, char *argv[], char *envp[]) {
   if (close(epoll_fd)) {
     eprintf("close");
   }
+  if (close(communication_fifo_fd_read)) {
+    eprintf("close");
+  }
+  if (close(communication_fifo_fd_write)) {
+    eprintf("close");
+  }
+  if (unlink(SERVER_COMMUNICATION_FIFO_PATHNAME)) {
+    eprintf("unlink");
+  }
   if (close(control_fifo_fd_read)) {
     eprintf("close");
   }
-  if (unlink(CONTROL_FIFO_PATH)) {
+  if (unlink(CONTROL_FIFO_PATHNAME)) {
     eprintf("unlink");
   }
 

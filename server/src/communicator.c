@@ -24,7 +24,7 @@
 /* for read */
 #include <unistd.h>
 
-/* for some helpful tips and tricks */
+/* for some helpful tips and tricks, defines */
 #include "../../include/lib.h"
 
 void *communicate (void *args_void) {
@@ -35,6 +35,7 @@ void *communicate (void *args_void) {
   int thread_id = args->thread_id;
   epollpar_t *epoll = args->epoll;
   int control_fifo_fd_read = args->control_fifo_fd_read;
+  int communication_fifo_fd_read = args->communication_fd_read;
   pthread_mutex_t *mutex = args->sharval->mutex;
   bool *running = &args->sharval->running;
 
@@ -82,6 +83,7 @@ void *communicate (void *args_void) {
         /* stop */
         if (!strcmp(command, commands[0])) {
           epoll_ctl(epoll->fd, EPOLL_CTL_DEL, control_fifo_fd_read, epoll->events);
+          epoll_ctl(epoll->fd, EPOLL_CTL_DEL, communication_fifo_fd_read, epoll->events);
           epoll->timeout = 0;
           *running = false;
         } else {
@@ -92,6 +94,21 @@ void *communicate (void *args_void) {
         free(command);
 
         pthread_mutex_unlock(mutex);
+      }
+      /* Client request */
+      else if (epoll->events[i].data.fd == communication_fifo_fd_read) {
+        char *request = (char *)malloc(FIFO_ATOMIC_BLOCK_SIZE * sizeof(*request));
+        if (request == NULL) {
+          eprintf("malloc");
+        }
+        int read_size = read(communication_fifo_fd_read, request, FIFO_ATOMIC_BLOCK_SIZE);
+        if (read_size != FIFO_ATOMIC_BLOCK_SIZE) {
+          eprintf("read");
+        }
+
+        printf("%s\n", request);
+
+        free(request);
       } else {
         errno = -1;
         eprintf("epoll_wait");

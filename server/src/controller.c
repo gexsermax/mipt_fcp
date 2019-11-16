@@ -32,7 +32,7 @@ void *control (void *args_void) {
   conargs_t *args = (conargs_t *)args_void;
   flags_t *flags = args->flags;
   int msgid = args->msgid;
-  int control_fifo_fd_write = open(CONTROL_FIFO_PATH, O_WRONLY);
+  int control_fifo_fd_write = open(CONTROL_FIFO_PATHNAME, O_WRONLY);
   if (control_fifo_fd_write < 0) {
     eprintf("open");
   }

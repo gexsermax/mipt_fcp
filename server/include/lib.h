@@ -9,7 +9,7 @@ struct program_flags {
 };
 typedef struct program_flags flags_t;
 
-#define CONTROL_FIFO_PATH "server/tmp/controller.fifo"
+#define CONTROL_FIFO_PATHNAME "server/tmp/controller.fifo"
 
 struct message_buffer {
   long mtype;
