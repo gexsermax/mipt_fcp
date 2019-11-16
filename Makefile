@@ -21,7 +21,7 @@ ClientDir = client/
 ClientSourcesDir = $(addprefix $(ClientDir), $(SourcesDir))
 ClientObjectsDir = $(addprefix $(ClientDir), $(ObjectsDir))
 ClientTmpDir = $(addprefix $(ClientDir), $(TmpDir))
-ClientSources = client.c
+ClientSources = client.c ls.c copyist.c
 ClientObjects = $(ClientSources:.c=.o)
 ClientCObjects = $(addprefix $(ClientObjectsDir), $(ClientObjects))
 ClientExecutable = client
