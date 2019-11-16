@@ -9,4 +9,4 @@ struct program_flags {
 };
 typedef struct program_flags flags_t;
 
-#endif // _FCP_CLIENT_CLIENT_H
+#endif /* _FCP_CLIENT_CLIENT_H */
