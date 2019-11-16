@@ -15,23 +15,27 @@
 /* for msgsnd */
 #include <sys/msg.h>
 
+/* for open */
+#include <sys/stat.h>
+
+/* for open */
+#include <fcntl.h>
+
+/* for write */
+#include <unistd.h>
+
 /* for some helpful tips and tricks */
 #include "../../include/lib.h"
-
-/* Commands for server control */
-#define COMMAND_MAX_LENGTH 16 /* Maximum length of available command */
-#define NCOMMANDS 2 /* Number of available commands */
-/* Using '\n' because 'fgets' stores it into the buffer */
-static const char * const commands[] = {
-  "stop\n",
-  "help\n"
-};
 
 void *control (void *args_void) {
   /* Parse arguments */
   conargs_t *args = (conargs_t *)args_void;
   flags_t *flags = args->flags;
   int msgid = args->msgid;
+  int control_fifo_fd_write = open(CONTROL_FIFO_PATH, O_WRONLY);
+  if (control_fifo_fd_write < 0) {
+    eprintf("open");
+  }
 
   if (flags->v) {
     printf("Hello, World! I'm the Server Contoller!\n");
@@ -54,6 +58,10 @@ void *control (void *args_void) {
 
       /* stop */
       if (!strcmp(command, commands[0])) {
+        int write_size = write(control_fifo_fd_write, commands[0], COMMAND_MAX_LENGTH);
+        if (write_size < 0) {
+          eprintf("write");
+        }
         scanning = false;
       }
       /* help */
@@ -73,7 +81,7 @@ void *control (void *args_void) {
   }
 
   if (flags->v) {
-    printf("Goodbye, World! Best Wishes, Controller!\n");
+    printf("Goodbye, World! Best Wishes, the Controller!\n");
   }
 
   return NULL;

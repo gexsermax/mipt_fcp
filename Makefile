@@ -10,6 +10,7 @@ TmpDir = tmp/
 ServerDir = server/
 ServerSourcesDir = $(addprefix $(ServerDir), $(SourcesDir))
 ServerObjectsDir = $(addprefix $(ServerDir), $(ObjectsDir))
+ServerTmpDir = $(addprefix $(ServerDir), $(TmpDir))
 ServerSources = server.c controller.c communicator.c
 ServerObjects = $(ServerSources:.c=.o)
 ServerCObjects = $(addprefix $(ServerObjectsDir), $(ServerObjects))
@@ -19,6 +20,7 @@ ServerCExecutable = $(addprefix $(BinDir), $(ServerExecutable))
 ClientDir = client/
 ClientSourcesDir = $(addprefix $(ClientDir), $(SourcesDir))
 ClientObjectsDir = $(addprefix $(ClientDir), $(ObjectsDir))
+ClientTmpDir = $(addprefix $(ClientDir), $(TmpDir))
 ClientSources = client.c
 ClientObjects = $(ClientSources:.c=.o)
 ClientCObjects = $(addprefix $(ClientObjectsDir), $(ClientObjects))
@@ -27,7 +29,7 @@ ClientCExecutable = $(addprefix $(BinDir), $(ClientExecutable))
 
 all: $(ServerExecutable) $(ClientExecutable)
 
-$(ServerExecutable): $(ServerCExecutable)
+$(ServerExecutable): $(ServerCExecutable) .server_tmp_dir
 
 $(ServerCExecutable): $(ServerCObjects) .bin_dir
 	$(CC) $(CFlags) $(ServerCObjects) -o $@
@@ -35,16 +37,22 @@ $(ServerCExecutable): $(ServerCObjects) .bin_dir
 $(ServerObjectsDir)%.o: $(ServerSourcesDir)%.c .server_object_dir
 	$(CC) $(CFlags) $< -c -o $@
 
+.server_tmp_dir:
+	mkdir -p $(ServerTmpDir)
+
 .server_object_dir:
 	mkdir -p $(ServerObjectsDir)
 
-$(ClientExecutable): $(ClientCExecutable)
+$(ClientExecutable): $(ClientCExecutable) .client_tmp_dir
 
 $(ClientCExecutable): $(ClientCObjects) .bin_dir
 	$(CC) $(CFlags) $(ClientCObjects) -o $@
 
 $(ClientObjectsDir)%.o: $(ClientSourcesDir)%.c .client_object_dir
 	$(CC) $(CFlags) $< -c -o $@
+
+.client_tmp_dir:
+	mkdir -p $(ClientTmpDir)
 
 .client_object_dir:
 	mkdir -p $(ClientObjectsDir)
@@ -53,4 +61,4 @@ $(ClientObjectsDir)%.o: $(ClientSourcesDir)%.c .client_object_dir
 	mkdir -p $(BinDir)
 
 clean:
-	rm -rf $(BinDir) $(ServerObjectsDir) $(ClientObjectsDir) $(TmpDir)
+	rm -rf $(BinDir) $(ServerObjectsDir) $(ClientObjectsDir) $(TmpDir) $(ServerTmpDir) $(ClientTmpDir)
